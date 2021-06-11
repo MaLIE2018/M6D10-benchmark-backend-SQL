@@ -3,15 +3,12 @@ import cors from 'cors';
 import reviewsRouter from './routes/reviews/reviews.js';
 import {badRequest, notFound, forbidden,catchAll } from "./modules/errorHandler.js"
 import filesRouter from './modules/files/fileHandler.js';
-import { getCurrentFolderPath } from './modules/files/fileHandler.js';
-import { join } from 'path';
 import productsRouter from './routes/products/products.js';
 import listEndpoints from "express-list-endpoints"
-import mongoose from "mongoose"
 import createError from 'http-errors';
 const app = express();
 const port = process.env.PORT || 3001;
-
+import db from "./modules/db/index.js"
 const whiteList = [process.env.WT_DEV_FE, process.env.WT_PROD_FE]
 
 
@@ -24,7 +21,6 @@ const corsOptions = {
     }
   }
 }
-
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -41,6 +37,5 @@ app.use((req,res,next)=>{
 })
 console.table(listEndpoints(app))
 
-mongoose.connect(process.env.MONGO_CONNECT,{useNewUrlParser: true, useUnifiedTopology: true} ).then(
-  ()=> app.listen(port, () => console.log(`Server at ${port}`)))
 
+db.sequelize.sync({alter:true}).then(()=> app.listen(port, ()=> {console.log("Listening on port" + port)}))

@@ -5,9 +5,7 @@
     "brand": "nexus 5",
     "imageUrl": "https://drop.ndtv.com/TECH/product_database/images/2152017124957PM_635_nokia_3310.jpeg?downsize=*:420&output-quality=80",
     "price": 250,
-    "category": "smartphones",
-    "createdAt": "2021-05-21T10:58:03.560Z",
-    "updatedAt": "2021-05-21T10:58:03.560Z"
+    "category": "smartphones"
   },
   {
     "name": "put name2",
@@ -15,9 +13,7 @@
     "brand": "iphone",
     "imageUrl": "https://drop.ndtv.com/TECH/product_database/images/2152017124957PM_635_nokia_3310.jpeg?downsize=*:420&output-quality=80",
     "price": 250,
-    "category": "smartphones",
-    "createdAt": "2021-05-21T16:42:30.275Z",
-    "updatedAt": "2021-06-04T07:46:33.830Z"
+    "category": "smartphones"
   },
   {
     "name": "Iphone X",
@@ -25,9 +21,7 @@
     "brand": "dfdf",
     "category": "smartphones",
     "imageUrl": "https://www.pricepony.com.ph/blog/wp-content/uploads/2020/11/200817-samsung-galaxy-s20-FE-onleaks-01-1-1024x576-1.jpg",
-    "price": 223323,
-    "createdAt": "2021-05-21T16:19:27.672Z",
-    "updatedAt": "2021-05-21T16:19:27.672Z"
+    "price": 223323
   },
   {
     "name": "Iphone X",
@@ -35,9 +29,7 @@
     "brand": "Motorola",
     "category": "smartphones",
     "imageUrl": "https://www.pricepony.com.ph/blog/wp-content/uploads/2020/11/200817-samsung-galaxy-s20-FE-onleaks-01-1-1024x576-1.jpg",
-    "price": 23232,
-    "createdAt": "2021-05-21T13:17:30.727Z",
-    "updatedAt": "2021-05-21T13:17:30.727Z"
+    "price": 23232
   },
   {
     "name": "G5",
@@ -45,9 +37,7 @@
     "brand": "Motorola",
     "imageUrl": "https://www.pricepony.com.ph/blog/wp-content/uploads/2020/11/200817-samsung-galaxy-s20-FE-onleaks-01-1-1024x576-1.jpg",
     "price": 2323,
-    "category": "smartphones",
-    "createdAt": "2021-05-21T13:18:05.770Z",
-    "updatedAt": "2021-05-21T13:18:05.770Z"
+    "category": "smartphones"
   },
   {
     "name": "G5",
@@ -55,9 +45,7 @@
     "brand": "dfdf",
     "imageUrl": "https://www.pricepony.com.ph/blog/wp-content/uploads/2020/11/200817-samsung-galaxy-s20-FE-onleaks-01-1-1024x576-1.jpg",
     "price": 23,
-    "category": "smartphones",
-    "createdAt": "2021-05-21T13:20:15.726Z",
-    "updatedAt": "2021-05-21T16:58:16.377Z"
+    "category": "smartphones"
   },
   {
     "name": "G5",
@@ -65,8 +53,6 @@
     "brand": "dfdfdf",
     "price": 2222,
     "category": "smartphones",
-    "createdAt": "2021-05-21T15:01:22.322Z",
-    "updatedAt": "2021-05-21T15:01:22.322Z",
     "imageUrl": "http://localhost:3001/img/Web 1920 – 1.png"
   },
   {
@@ -75,8 +61,6 @@
     "brand": "ddd",
     "price": 23232,
     "category": "smartphones",
-    "createdAt": "2021-05-21T15:20:24.922Z",
-    "updatedAt": "2021-05-21T16:47:23.555Z",
     "imageUrl": "http://localhost:3001/img/external-content.duckduckgo.com.jpg"
   },
   {
@@ -85,8 +69,6 @@
     "brand": "Motorola",
     "price": 2222,
     "category": "smartphones",
-    "createdAt": "2021-05-21T16:15:40.991Z",
-    "updatedAt": "2021-05-21T16:15:40.991Z",
     "imageUrl": "http://localhost:3001/img/feelings-wheel.jpg"
   }
 ]

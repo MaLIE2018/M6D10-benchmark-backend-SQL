@@ -1,46 +1,36 @@
-
-
 import express from 'express';
-import uniqid from 'uniqid';
 import createError from 'http-errors';
-import { readProducts, writeProducts } from '../../lib/fs-tools.js';
-import Products from "./productSchema.js"
+import models from "../../modules/db/index.js"
 import q2m from "query-to-mongo"
-/*
-****************** products CRUD ********************
-1. CREATE → POST http://localhost:3001/products (+ body)
-2. READ → GET http://localhost:3001/products (+ optional query parameters)
-3. READ → GET http://localhost:3001/products/:id
-4. UPDATE → PUT http://localhost:3001/products/:id (+ body)
-5. DELETE → DELETE http://localhost:3001/products/:id
-*/
-
+import o from "sequelize"
 const productsRouter = express.Router();
-
+const ProductM = models.Product
+const op = o.Op
 // get all products
 productsRouter.get('/', async (req, res, next) => {
   // price, category, 
-  
   try {
-    const total = await Products.countDocuments()
-    let query = q2m(req.query) 
-    let products = []
-    let criteria = {}
-    if(query.criteria.query){
-      if(Object.keys(query.criteria).length>1){
-        let search = query.criteria.query
-        delete query.criteria.query
-        criteria = {$and:[query.criteria,{$text: {$search:search}} ]}
-        query["criteria"] = criteria
-        products = await Products.find(criteria, {}, query.options)  
-      } else{
-        products = await Products.find({$text: {$search:query.criteria.query}}, {}, query.options)
-      }
-    } else{
-        products = await Products.find(query.criteria, {}, query.options)
-      }
-    console.log('query2:', query)
-    res.status(200).send({links: query.links("/products", total),total, products})
+    const query = q2m(req.query)
+    console.log('query:', query)
+    const {brand, category} = query.criteria
+    const products = await ProductM.findAll({offset: query.criteria.skip, limit: query.options.limit})
+    const total = await ProductM.count()
+    let brands = await ProductM.findAll({
+      attributes: [[models.sequelize.fn('DISTINCT', models.sequelize.col('brand')), 'Brand']],
+      group:['brand'],raw: true
+    })
+    brands = brands.reduce((acc, el) =>{
+      acc.push(el.Brand)
+      return acc
+    },[] )
+    let categories = await ProductM.findAll({
+      attributes: [[models.sequelize.fn('DISTINCT', models.sequelize.col('category')), 'Category']],group:['category'],raw: true
+    })
+    categories = categories.reduce((acc, el) =>{
+      acc.push(el.Category)
+      return acc
+    },[] )
+    res.status(200).send({brands: brands,categories:categories,total: total, products: products})
   } catch (error) {
     console.log("getProductsError", error)
     res.send({ message: error.message });
@@ -50,23 +40,70 @@ productsRouter.get('/', async (req, res, next) => {
 // get single product
 productsRouter.get("/:id", async (req, res, next) => {
   try {
-    const product= await Products.findById(req.params.id)
-    if (product) {
-      res.send(product);
-    } else {
-     next(createError(404, {message: "Product not found."}))
-    }
+    const product = await ProductM.findByPk(req.params.id)
+    res.status(200).send(product)
   } catch (error) {
+    console.log(error)
     next(error);
+  }
+});
+
+productsRouter.post("/bulk", async (req, res, next) => {
+  try {
+    await ProductM.bulkCreate([
+      {
+        "name": "The Last Wish: Introducing the Witcher",
+        "imageUrl": "https://images-na.ssl-images-amazon.com/images/I/51eHtkVLL5L.jpg",
+        "price": 9.59,
+        "category": "books",
+        "brand": "Booker",
+        "description": "Great Book"
+      },
+      {
+        "name": "Sword of Destiny (The Witcher)",
+        "imageUrl": "https://images-na.ssl-images-amazon.com/images/I/91uxJwnolDL.jpg",
+        "price": 10.39,
+        "category": "books",
+        "brand": "Booker",
+        "description": "Great Book"
+      },
+      {
+        "name": "D&D MORDENKAINEN'S TOME OF FOES (Dungeons & Dragons)",
+        "imageUrl": "https://images-na.ssl-images-amazon.com/images/I/8147MOLG%2BoL.jpg",
+        "price": 27.94,
+        "category": "books",
+        "brand": "Booker",
+        "description": "Great Book"
+      },
+      {
+        "name": "Destiny Grimoire Anthology, Volume II: Fallen Kingdoms",
+        "imageUrl": "https://images-na.ssl-images-amazon.com/images/I/91IHwcEy2DL.jpg",
+        "price": 19.92,
+        "category": "books",
+        "brand": "Booker",
+        "description": "Great Book"
+      },
+      {
+        "name": "D&D Waterdeep Dragon Heist HC (Dungeons & Dragons)",
+        "imageUrl": "https://images-na.ssl-images-amazon.com/images/I/81Sfnxpke4L.jpg",
+        "price": 34.61,
+        "category": "books",
+        "brand": "Booker",
+        "description": "Great Book"
+      }
+    ]
+    )
+    res.status(200).send();
+  } catch (error) {
+    res.status(500).send({ message: error.message });
   }
 });
 
 // create/POST product
 productsRouter.post("/", async (req, res, next) => {
   try {
-    const newProduct = new Products(req.body)
-    const {_id} = await newProduct.save()
-    res.status(200).send({ id: _id });
+    const product = await ProductM.create(req.body)
+    res.status(200).send({ id: product.id });
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
@@ -75,19 +112,8 @@ productsRouter.post("/", async (req, res, next) => {
 // DELETE product
 productsRouter.delete("/:id", async (req, res, next) => {
   try {
-    const content = await readProducts();
-
-    if (content.find((product) => product._id === req.params.id)) {
-      const newProduct = content.filter(
-        (content) => content._id !== req.params.id
-      );
-      await writeProducts(newProduct);
-      res.send();
-    } else {
-      res
-        .status(404)
-        .send({ message: `product with ${req.params.id} id not found!` });
-    }
+    await ProductM.destroy({where: { id: req.params.id}})
+    res.status(204).send()
   } catch (error) {
     res.send(500).send({ message: error.message });
   }
@@ -96,147 +122,13 @@ productsRouter.delete("/:id", async (req, res, next) => {
 // update/PUT product
 productsRouter.put("/:id", async (req, res, next) => {
   try {
-    const content = await readProducts();
-
-    if (content.find((product) => product._id === req.params.id)) {
-      const product = content.findIndex(
-        (product) => product._id === req.params.id
-      );
-      const newProduct = {
-        _id: req.params.id,
-        ...req.body,
-        updatedAt: new Date(),
-      };
-      content[product] = newProduct;
-      await writeProducts(content);
-      res.send({ id: newProduct._id });
-    } else {
-      res
-        .status(404)
-        .send({ message: `product with ${req.params.id} id not found!` });
-    }
+    const product = await ProductM.update(req.body,{where: {id: req.params.id}})
+    res.status(200).send({ id: product.id });
   } catch (error) {
     res.send(500).send({ message: error.message });
   }
 });
 
-// comments endpoints **************************
 
-productsRouter.post("/:id/comments/", async (req, res, next) => {
-  try {
-    const updatedProduct = await Products.findByIdAndUpdate(
-      req.params.id,
-      {
-        $push: {
-          comments: req.body,
-        },
-      },
-      { runValidators: true, new: true }
-    );
-    if (updatedProduct) {
-      res.send(updatedProduct);
-    } else {
-      next(createError(404, {message:`Product ${req.params.id} not found`}));
-    }
-  } catch (error) {
-    console.log(error);
-    next(createError(500,{message: "An error occurred while adding the comment"}));
-  }
-});
-
-productsRouter.get("/:id/comments/", async (req, res, next) => {
-  try {
-    const product = await Products.findById(req.params.id);
-    if (product) {
-      res.send(product.comments);
-    } else {
-      next(createError(404, {message:`product ${req.params.id} not found`}));
-    }
-  } catch (error) {
-    console.log(error);
-    next(createError(500, {message:"An error occurred while fetching the comments"}));
-  }
-});
-
-productsRouter.get("/:id/comments/:commentId", async (req, res, next) => {
-  try {
-    const product = await Products.findOne(
-      {
-        _id: req.params.id,
-      },
-      {
-        comments: {
-          $elemMatch: { _id: req.params.commentId },
-        },
-      }
-    );
-    if (product) {
-      const { comments } = product;
-      if (comments && comments.length > 0) {
-        res.send(comments[0]);
-      } else {
-        next(
-          createError(
-            404,
-            {message:`Comment ${req.params.commentId} not found in comments`}
-          )
-        );
-      }
-    } else {
-      next(createError(404, {message:`product ${req.params.id} not found`}));
-    }
-  } catch (error) {
-    console.log(error);
-    next(createError(500, "An error occurred while updating the comment"));
-  }
-});
-
-productsRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
-  try {
-    const product = await Products.findByIdAndUpdate(
-      req.params.id,
-      {
-        $pull: {
-          comments: { _id: req.params.commentId },
-        },
-      },
-      {
-        new: true,
-      }
-    );
-    if (product) {
-      res.send(product);
-    } else {
-      next(createError(404, {message:`product ${req.params.id} not found`}));
-    }
-  } catch (error) {
-    console.log(error);
-    next(createError(500, {message:"An error occurred while deleting the comment"}));
-  }
-});
-
-productsRouter.put("/:id/comments/:commentId", async (req, res, next) => {
-  try {
-    const product = await Products.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        "comments._id": req.params.commentId,
-      },
-      { $set: { "comments.$": req.body } },
-      {
-        runValidators: true,
-        new: true,
-      }
-    );
-    if (product) {
-      res.send(product);
-    } else {
-      next(createError(404, {message:`product ${req.params.id} not found`}));
-    }
-  } catch (error) {
-    console.log(error);
-    next(createError(500, "An error occurred while updating the comment"));
-  }
-});
 
 export default productsRouter;
