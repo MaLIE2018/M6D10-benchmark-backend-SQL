@@ -12,8 +12,21 @@ productsRouter.get('/', async (req, res, next) => {
   try {
     const query = q2m(req.query)
     console.log('query:', query)
-    const {brand, category} = query.criteria
-    const products = await ProductM.findAll({offset: query.criteria.skip, limit: query.options.limit})
+    let or = []
+    let where ={}
+    const {brand, category} = query.criterias
+    if(brand) {
+      let bquery = { brand: {[op.substring]: brand} }
+      or.push(bquery)
+    }
+    if(category) {
+      let cquery = { category: {[op.substring]: category} }
+      or.push(cquery)
+    }
+    if(or.length >0 ){
+     where = {[op.or]:or}
+    } 
+    const products = await ProductM.findAll({offset: query.criteria.skip, limit: query.options.limit, where:where?where:{}})
     const total = await ProductM.count()
     let brands = await ProductM.findAll({
       attributes: [[models.sequelize.fn('DISTINCT', models.sequelize.col('brand')), 'Brand']],
